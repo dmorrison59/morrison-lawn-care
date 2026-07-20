@@ -54,13 +54,14 @@ function RootLayoutNav() {
     if (authLoading || businessLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inTabsGroup = segments[0] === '(tabs)';
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (session && !business && segments[1] !== 'create-business') {
       router.replace('/(auth)/create-business');
-    } else if (session && business && inAuthGroup) {
-      router.replace('/(tabs)');
+    } else if (session && business && !inTabsGroup) {
+      router.replace('/(tabs)/customers');
     }
   }, [session, authLoading, business, businessLoading, segments, router]);
 
