@@ -1,7 +1,9 @@
 -- Multi-tenant support: introduce businesses + users(auth link), add business_id
 -- to all tenant tables, backfill from existing user_id data, and re-scope RLS
 -- policies to business_id. user_id columns are left in place as a legacy
--- reference and are NOT dropped or backfilled away.
+-- reference and are NOT dropped or backfilled away. Exception: quote_items
+-- has no user_id column of its own (only quote_id, linking to quotes), so its
+-- business_id is backfilled via its parent quote instead.
 
 create extension if not exists pgcrypto;
 
@@ -48,8 +50,6 @@ select distinct all_user_ids.user_id from (
   select user_id from public.properties
   union
   select user_id from public.quotes
-  union
-  select user_id from public.quote_items
   union
   select user_id from public.jobs
   union
@@ -101,7 +101,10 @@ alter table public.settings add column if not exists business_id uuid references
 update public.customers c set business_id = pu.business_id from public.users pu where c.user_id = pu.id and c.business_id is null;
 update public.properties p set business_id = pu.business_id from public.users pu where p.user_id = pu.id and p.business_id is null;
 update public.quotes q set business_id = pu.business_id from public.users pu where q.user_id = pu.id and q.business_id is null;
-update public.quote_items qi set business_id = pu.business_id from public.users pu where qi.user_id = pu.id and qi.business_id is null;
+-- quote_items has no user_id of its own; it's scoped via quotes.quote_id, so
+-- its business_id must come from the parent quote (already backfilled above)
+-- rather than from public.users directly.
+update public.quote_items qi set business_id = q.business_id from public.quotes q where qi.quote_id = q.id and qi.business_id is null;
 update public.jobs j set business_id = pu.business_id from public.users pu where j.user_id = pu.id and j.business_id is null;
 update public.pricing_tiers pt set business_id = pu.business_id from public.users pu where pt.user_id = pu.id and pt.business_id is null;
 update public.settings s set business_id = pu.business_id from public.users pu where s.user_id = pu.id and s.business_id is null;
