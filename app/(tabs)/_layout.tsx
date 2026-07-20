@@ -17,9 +17,10 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="index"
+        name="customers"
         options={{
           title: 'Customers',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView name={{ ios: 'person.2', android: 'group', web: 'group' }} tintColor={color} size={26} />
           ),
