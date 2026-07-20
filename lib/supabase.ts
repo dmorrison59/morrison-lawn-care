@@ -11,9 +11,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// Expo Router's web output pre-renders routes on the server (no `window`),
+// where AsyncStorage's web shim would throw. No-op there; the client re-reads
+// the real session once it hydrates in the browser.
+const ssrSafeStorage = {
+  getItem: (key: string) => (typeof window === "undefined" ? Promise.resolve(null) : AsyncStorage.getItem(key)),
+  setItem: (key: string, value: string) =>
+    typeof window === "undefined" ? Promise.resolve() : AsyncStorage.setItem(key, value),
+  removeItem: (key: string) =>
+    typeof window === "undefined" ? Promise.resolve() : AsyncStorage.removeItem(key),
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    storage: ssrSafeStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
