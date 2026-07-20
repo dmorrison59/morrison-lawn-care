@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Text, View } from "@/components/Themed";
@@ -12,6 +12,8 @@ export default function NewCustomerScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +26,8 @@ export default function NewCustomerScreen() {
         name: name.trim(),
         email: email.trim() || null,
         phone: phone.trim() || null,
+        address: address.trim() || null,
+        notes: notes.trim() || null,
         businessId: business.id,
         userId: session.user.id,
       });
@@ -36,7 +40,7 @@ export default function NewCustomerScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} autoFocus />
       <TextInput
         style={styles.input}
@@ -53,6 +57,14 @@ export default function NewCustomerScreen() {
         value={phone}
         onChangeText={setPhone}
       />
+      <TextInput style={styles.input} placeholder="Address" value={address} onChangeText={setAddress} />
+      <TextInput
+        style={styles.input}
+        placeholder="Notes"
+        value={notes}
+        onChangeText={setNotes}
+        multiline
+      />
 
       {error && <Text style={styles.error}>{error}</Text>}
 
@@ -63,13 +75,15 @@ export default function NewCustomerScreen() {
       >
         {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save</Text>}
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
     padding: 24,
     gap: 12,
   },

@@ -14,6 +14,13 @@ import {
   type Property,
 } from "@/lib/customers";
 
+function parseOptionalNumber(text: string): number | null | undefined {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const value = Number(trimmed);
+  return Number.isFinite(value) ? value : undefined;
+}
+
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session, business } = useAuth();
@@ -22,6 +29,8 @@ export default function CustomerDetailScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingCustomer, setSavingCustomer] = useState(false);
@@ -30,11 +39,17 @@ export default function CustomerDetailScreen() {
 
   const [addingProperty, setAddingProperty] = useState(false);
   const [newAddress, setNewAddress] = useState("");
+  const [newSquareFootage, setNewSquareFootage] = useState("");
+  const [newLatitude, setNewLatitude] = useState("");
+  const [newLongitude, setNewLongitude] = useState("");
   const [newNotes, setNewNotes] = useState("");
   const [savingProperty, setSavingProperty] = useState(false);
 
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
   const [editAddress, setEditAddress] = useState("");
+  const [editSquareFootage, setEditSquareFootage] = useState("");
+  const [editLatitude, setEditLatitude] = useState("");
+  const [editLongitude, setEditLongitude] = useState("");
   const [editNotes, setEditNotes] = useState("");
 
   const load = useCallback(async () => {
@@ -46,6 +61,8 @@ export default function CustomerDetailScreen() {
       setName(customerData.name);
       setEmail(customerData.email ?? "");
       setPhone(customerData.phone ?? "");
+      setAddress(customerData.address ?? "");
+      setNotes(customerData.notes ?? "");
       setProperties(propertiesData);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load customer");
@@ -64,7 +81,13 @@ export default function CustomerDetailScreen() {
     setSavingCustomer(true);
     setError(null);
     try {
-      await updateCustomer(id, { name: name.trim(), email: email.trim() || null, phone: phone.trim() || null });
+      await updateCustomer(id, {
+        name: name.trim(),
+        email: email.trim() || null,
+        phone: phone.trim() || null,
+        address: address.trim() || null,
+        notes: notes.trim() || null,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save customer");
     } finally {
@@ -74,17 +97,33 @@ export default function CustomerDetailScreen() {
 
   const onAddProperty = async () => {
     if (!business || !session) return;
+
+    const squareFootage = parseOptionalNumber(newSquareFootage);
+    const latitude = parseOptionalNumber(newLatitude);
+    const longitude = parseOptionalNumber(newLongitude);
+    if (squareFootage === undefined || latitude === undefined || longitude === undefined) {
+      setError("Square footage, latitude, and longitude must be numbers");
+      return;
+    }
+
+    setError(null);
     setSavingProperty(true);
     try {
       const property = await createProperty({
         customerId: id,
         address: newAddress.trim(),
+        squareFootage,
+        latitude,
+        longitude,
         notes: newNotes.trim() || null,
         businessId: business.id,
         userId: session.user.id,
       });
       setProperties((prev) => [...prev, property]);
       setNewAddress("");
+      setNewSquareFootage("");
+      setNewLatitude("");
+      setNewLongitude("");
       setNewNotes("");
       setAddingProperty(false);
     } catch (e) {
@@ -97,13 +136,31 @@ export default function CustomerDetailScreen() {
   const startEditingProperty = (property: Property) => {
     setEditingPropertyId(property.id);
     setEditAddress(property.address);
+    setEditSquareFootage(property.square_footage?.toString() ?? "");
+    setEditLatitude(property.latitude?.toString() ?? "");
+    setEditLongitude(property.longitude?.toString() ?? "");
     setEditNotes(property.notes ?? "");
   };
 
   const onSaveProperty = async (propertyId: string) => {
+    const squareFootage = parseOptionalNumber(editSquareFootage);
+    const latitude = parseOptionalNumber(editLatitude);
+    const longitude = parseOptionalNumber(editLongitude);
+    if (squareFootage === undefined || latitude === undefined || longitude === undefined) {
+      setError("Square footage, latitude, and longitude must be numbers");
+      return;
+    }
+
+    setError(null);
     setSavingProperty(true);
     try {
-      const updates = { address: editAddress.trim(), notes: editNotes.trim() || null };
+      const updates = {
+        address: editAddress.trim(),
+        square_footage: squareFootage,
+        latitude,
+        longitude,
+        notes: editNotes.trim() || null,
+      };
       await updateProperty(propertyId, updates);
       setProperties((prev) => prev.map((p) => (p.id === propertyId ? { ...p, ...updates } : p)));
       setEditingPropertyId(null);
@@ -145,6 +202,8 @@ export default function CustomerDetailScreen() {
         onChangeText={setEmail}
       />
       <TextInput style={styles.input} placeholder="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
+      <TextInput style={styles.input} placeholder="Address" value={address} onChangeText={setAddress} />
+      <TextInput style={styles.input} placeholder="Notes" value={notes} onChangeText={setNotes} multiline />
 
       {error && <Text style={styles.error}>{error}</Text>}
 
@@ -164,6 +223,25 @@ export default function CustomerDetailScreen() {
         editingPropertyId === property.id ? (
           <View key={property.id} style={styles.propertyCard}>
             <TextInput style={styles.input} placeholder="Address" value={editAddress} onChangeText={setEditAddress} />
+            <TextInput
+              style={styles.input}
+              placeholder="Square footage"
+              keyboardType="numeric"
+              value={editSquareFootage}
+              onChangeText={setEditSquareFootage}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Latitude"
+              value={editLatitude}
+              onChangeText={setEditLatitude}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Longitude"
+              value={editLongitude}
+              onChangeText={setEditLongitude}
+            />
             <TextInput
               style={styles.input}
               placeholder="Notes"
@@ -187,6 +265,14 @@ export default function CustomerDetailScreen() {
         ) : (
           <Pressable key={property.id} style={styles.propertyCard} onPress={() => startEditingProperty(property)}>
             <Text style={styles.rowTitle}>{property.address}</Text>
+            {property.square_footage != null && (
+              <Text style={styles.rowSubtitle}>{property.square_footage.toLocaleString()} sq ft</Text>
+            )}
+            {property.latitude != null && property.longitude != null && (
+              <Text style={styles.rowSubtitle}>
+                {property.latitude}, {property.longitude}
+              </Text>
+            )}
             {property.notes && <Text style={styles.rowSubtitle}>{property.notes}</Text>}
           </Pressable>
         )
@@ -195,12 +281,24 @@ export default function CustomerDetailScreen() {
       {addingProperty ? (
         <View style={styles.propertyCard}>
           <TextInput style={styles.input} placeholder="Address" value={newAddress} onChangeText={setNewAddress} autoFocus />
+          <TextInput
+            style={styles.input}
+            placeholder="Square footage"
+            keyboardType="numeric"
+            value={newSquareFootage}
+            onChangeText={setNewSquareFootage}
+          />
+          <TextInput style={styles.input} placeholder="Latitude" value={newLatitude} onChangeText={setNewLatitude} />
+          <TextInput style={styles.input} placeholder="Longitude" value={newLongitude} onChangeText={setNewLongitude} />
           <TextInput style={styles.input} placeholder="Notes" value={newNotes} onChangeText={setNewNotes} multiline />
           <View style={styles.propertyActions}>
             <Pressable
               onPress={() => {
                 setAddingProperty(false);
                 setNewAddress("");
+                setNewSquareFootage("");
+                setNewLatitude("");
+                setNewLongitude("");
                 setNewNotes("");
               }}
               style={styles.secondaryButton}
