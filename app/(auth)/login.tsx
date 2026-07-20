@@ -1,8 +1,14 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 
-import { Text, View } from "@/components/Themed";
+import { AuthCard } from "@/components/AuthCard";
+import { Text } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginScreen() {
@@ -25,7 +31,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <AuthCard>
       <Text style={styles.title}>Log in</Text>
 
       <TextInput
@@ -53,23 +59,21 @@ export default function LoginScreen() {
         onPress={onSubmit}
         disabled={submitting || !email || !password}
       >
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log in</Text>}
+        {submitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Log in</Text>
+        )}
       </Pressable>
 
       <Link href="/(auth)/sign-up" style={styles.link}>
         <Text>Don&apos;t have an account? Sign up</Text>
       </Link>
-    </View>
+    </AuthCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    gap: 12,
-  },
   title: {
     fontSize: 28,
     fontWeight: "bold",

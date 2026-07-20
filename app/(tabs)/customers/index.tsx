@@ -1,8 +1,14 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+} from "react-native";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 
-import { Text, View } from "@/components/Themed";
+import { ResponsiveContainer } from "@/components/ResponsiveContainer";
+import { Text } from "@/components/Themed";
 import { listCustomers, type Customer } from "@/lib/customers";
 
 export default function CustomersListScreen() {
@@ -20,7 +26,10 @@ export default function CustomersListScreen() {
           if (!cancelled) setCustomers(data);
         })
         .catch((e) => {
-          if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load customers");
+          if (!cancelled)
+            setError(
+              e instanceof Error ? e.message : "Failed to load customers",
+            );
         })
         .finally(() => {
           if (!cancelled) setLoading(false);
@@ -28,16 +37,19 @@ export default function CustomersListScreen() {
       return () => {
         cancelled = true;
       };
-    }, [])
+    }, []),
   );
 
   return (
-    <View style={styles.container}>
+    <ResponsiveContainer maxWidth={800} style={styles.container}>
       <Stack.Screen
         options={{
           headerShown: true,
           headerRight: () => (
-            <Pressable onPress={() => router.push("/(tabs)/customers/new")} hitSlop={12}>
+            <Pressable
+              onPress={() => router.push("/(tabs)/customers/new")}
+              hitSlop={12}
+            >
               <Text style={styles.addButton}>Add</Text>
             </Pressable>
           ),
@@ -48,28 +60,35 @@ export default function CustomersListScreen() {
       {error && <Text style={styles.error}>{error}</Text>}
 
       {!loading && !error && customers.length === 0 && (
-        <Text style={styles.empty}>No customers yet. Tap Add to create one.</Text>
+        <Text style={styles.empty}>
+          No customers yet. Tap Add to create one.
+        </Text>
       )}
 
       <FlatList
         data={customers}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <Pressable style={styles.row} onPress={() => router.push(`/(tabs)/customers/${item.id}`)}>
+          <Pressable
+            style={styles.row}
+            onPress={() => router.push(`/(tabs)/customers/${item.id}`)}
+          >
             <Text style={styles.rowTitle}>{item.name}</Text>
             {(item.email || item.phone) && (
-              <Text style={styles.rowSubtitle}>{[item.email, item.phone].filter(Boolean).join(" · ")}</Text>
+              <Text style={styles.rowSubtitle}>
+                {[item.email, item.phone].filter(Boolean).join(" · ")}
+              </Text>
             )}
           </Pressable>
         )}
       />
-    </View>
+    </ResponsiveContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: "100%",
   },
   addButton: {
     fontSize: 16,
