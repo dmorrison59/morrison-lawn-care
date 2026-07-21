@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 
-import { Text, View } from "@/components/Themed";
+import { AuthCard } from "@/components/AuthCard";
+import { Text } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
 
 export default function CreateBusinessScreen() {
@@ -24,9 +30,11 @@ export default function CreateBusinessScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <AuthCard>
       <Text style={styles.title}>Set up your business</Text>
-      <Text style={styles.subtitle}>What's the name of your lawn care business?</Text>
+      <Text style={styles.subtitle}>
+        What's the name of your lawn care business?
+      </Text>
 
       <TextInput
         style={styles.input}
@@ -42,23 +50,21 @@ export default function CreateBusinessScreen() {
         onPress={onSubmit}
         disabled={submitting || !businessName.trim()}
       >
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continue</Text>}
+        {submitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Continue</Text>
+        )}
       </Pressable>
 
       <Pressable style={styles.link} onPress={() => signOut()}>
         <Text>Log out</Text>
       </Pressable>
-    </View>
+    </AuthCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    gap: 12,
-  },
   title: {
     fontSize: 28,
     fontWeight: "bold",

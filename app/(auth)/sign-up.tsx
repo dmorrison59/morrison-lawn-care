@@ -1,8 +1,14 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, TextInput } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 
-import { Text, View } from "@/components/Themed";
+import { AuthCard } from "@/components/AuthCard";
+import { Text } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
 
 export default function SignUpScreen() {
@@ -43,20 +49,21 @@ export default function SignUpScreen() {
 
   if (checkEmail) {
     return (
-      <View style={styles.container}>
+      <AuthCard>
         <Text style={styles.title}>Check your email</Text>
         <Text>
-          We sent a confirmation link to {email}. Once confirmed, log in to finish setting up your business.
+          We sent a confirmation link to {email}. Once confirmed, log in to
+          finish setting up your business.
         </Text>
         <Link href="/(auth)/login" style={styles.link}>
           <Text>Back to log in</Text>
         </Link>
-      </View>
+      </AuthCard>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <AuthCard>
       <Text style={styles.title}>Sign up</Text>
 
       <TextInput
@@ -91,23 +98,21 @@ export default function SignUpScreen() {
         onPress={onSubmit}
         disabled={submitting || !email || !password || !confirmPassword}
       >
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign up</Text>}
+        {submitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Sign up</Text>
+        )}
       </Pressable>
 
       <Link href="/(auth)/login" style={styles.link}>
         <Text>Already have an account? Log in</Text>
       </Link>
-    </View>
+    </AuthCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    gap: 12,
-  },
   title: {
     fontSize: 28,
     fontWeight: "bold",

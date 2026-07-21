@@ -1,13 +1,14 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from "react-native";
 
-import { Text, View } from '@/components/Themed';
-import { useAuth } from '@/lib/auth-context';
+import { ResponsiveContainer } from "@/components/ResponsiveContainer";
+import { Text, View } from "@/components/Themed";
+import { useAuth } from "@/lib/auth-context";
 
 export default function SettingsScreen() {
   const { session, business, role, signOut } = useAuth();
 
   return (
-    <View style={styles.container}>
+    <ResponsiveContainer maxWidth={560} style={styles.container}>
       <Text style={styles.title}>Settings</Text>
 
       <View style={styles.section}>
@@ -33,19 +34,18 @@ export default function SettingsScreen() {
       <Pressable style={styles.button} onPress={() => signOut()}>
         <Text style={styles.buttonText}>Log out</Text>
       </Pressable>
-    </View>
+    </ResponsiveContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 24,
     gap: 16,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   section: {
@@ -54,21 +54,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     opacity: 0.6,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   value: {
     fontSize: 16,
   },
   button: {
     marginTop: 24,
-    backgroundColor: '#c0392b',
+    backgroundColor: "#c0392b",
     borderRadius: 8,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
     fontSize: 16,
   },
 });

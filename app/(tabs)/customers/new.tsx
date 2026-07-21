@@ -1,8 +1,15 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 
-import { Text, View } from "@/components/Themed";
+import { Text } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
 import { createCustomer } from "@/lib/customers";
 
@@ -40,41 +47,65 @@ export default function NewCustomerScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} autoFocus />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Phone"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-      />
-      <TextInput style={styles.input} placeholder="Address" value={address} onChangeText={setAddress} />
-      <TextInput
-        style={styles.input}
-        placeholder="Notes"
-        value={notes}
-        onChangeText={setNotes}
-        multiline
-      />
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="Name"
+          value={name}
+          onChangeText={setName}
+          autoFocus
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Address"
+          value={address}
+          onChangeText={setAddress}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Notes"
+          value={notes}
+          onChangeText={setNotes}
+          multiline
+        />
 
-      {error && <Text style={styles.error}>{error}</Text>}
+        {error && <Text style={styles.error}>{error}</Text>}
 
-      <Pressable
-        style={[styles.button, (submitting || !name.trim()) && styles.buttonDisabled]}
-        onPress={onSubmit}
-        disabled={submitting || !name.trim()}
-      >
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save</Text>}
-      </Pressable>
+        <Pressable
+          style={[
+            styles.button,
+            (submitting || !name.trim()) && styles.buttonDisabled,
+          ]}
+          onPress={onSubmit}
+          disabled={submitting || !name.trim()}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Save</Text>
+          )}
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -85,6 +116,11 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
+    alignItems: "center",
+  },
+  form: {
+    width: "100%",
+    maxWidth: 480,
     gap: 12,
   },
   input: {

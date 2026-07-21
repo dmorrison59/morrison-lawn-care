@@ -1,5 +1,11 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 
 import { Text, View } from "@/components/Themed";
@@ -45,7 +51,9 @@ export default function CustomerDetailScreen() {
   const [newNotes, setNewNotes] = useState("");
   const [savingProperty, setSavingProperty] = useState(false);
 
-  const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
+  const [editingPropertyId, setEditingPropertyId] = useState<string | null>(
+    null,
+  );
   const [editAddress, setEditAddress] = useState("");
   const [editSquareFootage, setEditSquareFootage] = useState("");
   const [editLatitude, setEditLatitude] = useState("");
@@ -56,7 +64,10 @@ export default function CustomerDetailScreen() {
     setLoading(true);
     setError(null);
     try {
-      const [customerData, propertiesData] = await Promise.all([getCustomer(id), listProperties(id)]);
+      const [customerData, propertiesData] = await Promise.all([
+        getCustomer(id),
+        listProperties(id),
+      ]);
       setCustomer(customerData);
       setName(customerData.name);
       setEmail(customerData.email ?? "");
@@ -74,7 +85,7 @@ export default function CustomerDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load])
+    }, [load]),
   );
 
   const onSaveCustomer = async () => {
@@ -101,7 +112,11 @@ export default function CustomerDetailScreen() {
     const squareFootage = parseOptionalNumber(newSquareFootage);
     const latitude = parseOptionalNumber(newLatitude);
     const longitude = parseOptionalNumber(newLongitude);
-    if (squareFootage === undefined || latitude === undefined || longitude === undefined) {
+    if (
+      squareFootage === undefined ||
+      latitude === undefined ||
+      longitude === undefined
+    ) {
       setError("Square footage, latitude, and longitude must be numbers");
       return;
     }
@@ -146,7 +161,11 @@ export default function CustomerDetailScreen() {
     const squareFootage = parseOptionalNumber(editSquareFootage);
     const latitude = parseOptionalNumber(editLatitude);
     const longitude = parseOptionalNumber(editLongitude);
-    if (squareFootage === undefined || latitude === undefined || longitude === undefined) {
+    if (
+      squareFootage === undefined ||
+      latitude === undefined ||
+      longitude === undefined
+    ) {
       setError("Square footage, latitude, and longitude must be numbers");
       return;
     }
@@ -162,7 +181,9 @@ export default function CustomerDetailScreen() {
         notes: editNotes.trim() || null,
       };
       await updateProperty(propertyId, updates);
-      setProperties((prev) => prev.map((p) => (p.id === propertyId ? { ...p, ...updates } : p)));
+      setProperties((prev) =>
+        prev.map((p) => (p.id === propertyId ? { ...p, ...updates } : p)),
+      );
       setEditingPropertyId(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save property");
@@ -191,134 +212,220 @@ export default function CustomerDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: customer.name }} />
 
-      <Text style={styles.sectionTitle}>Customer</Text>
-      <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput style={styles.input} placeholder="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-      <TextInput style={styles.input} placeholder="Address" value={address} onChangeText={setAddress} />
-      <TextInput style={styles.input} placeholder="Notes" value={notes} onChangeText={setNotes} multiline />
+      <View style={styles.form}>
+        <Text style={styles.sectionTitle}>Customer</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Name"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Address"
+          value={address}
+          onChangeText={setAddress}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Notes"
+          value={notes}
+          onChangeText={setNotes}
+          multiline
+        />
 
-      {error && <Text style={styles.error}>{error}</Text>}
+        {error && <Text style={styles.error}>{error}</Text>}
 
-      <Pressable
-        style={[styles.button, (savingCustomer || !name.trim()) && styles.buttonDisabled]}
-        onPress={onSaveCustomer}
-        disabled={savingCustomer || !name.trim()}
-      >
-        {savingCustomer ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save</Text>}
-      </Pressable>
+        <Pressable
+          style={[
+            styles.button,
+            (savingCustomer || !name.trim()) && styles.buttonDisabled,
+          ]}
+          onPress={onSaveCustomer}
+          disabled={savingCustomer || !name.trim()}
+        >
+          {savingCustomer ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Save</Text>
+          )}
+        </Pressable>
 
-      <Text style={[styles.sectionTitle, styles.propertiesTitle]}>Properties</Text>
+        <Text style={[styles.sectionTitle, styles.propertiesTitle]}>
+          Properties
+        </Text>
 
-      {properties.length === 0 && !addingProperty && <Text style={styles.empty}>No properties yet.</Text>}
+        {properties.length === 0 && !addingProperty && (
+          <Text style={styles.empty}>No properties yet.</Text>
+        )}
 
-      {properties.map((property) =>
-        editingPropertyId === property.id ? (
-          <View key={property.id} style={styles.propertyCard}>
-            <TextInput style={styles.input} placeholder="Address" value={editAddress} onChangeText={setEditAddress} />
+        {properties.map((property) =>
+          editingPropertyId === property.id ? (
+            <View key={property.id} style={styles.propertyCard}>
+              <TextInput
+                style={styles.input}
+                placeholder="Address"
+                value={editAddress}
+                onChangeText={setEditAddress}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Square footage"
+                keyboardType="numeric"
+                value={editSquareFootage}
+                onChangeText={setEditSquareFootage}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Latitude"
+                value={editLatitude}
+                onChangeText={setEditLatitude}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Longitude"
+                value={editLongitude}
+                onChangeText={setEditLongitude}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Notes"
+                value={editNotes}
+                onChangeText={setEditNotes}
+                multiline
+              />
+              <View style={styles.propertyActions}>
+                <Pressable
+                  onPress={() => setEditingPropertyId(null)}
+                  style={styles.secondaryButton}
+                >
+                  <Text>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.button,
+                    styles.smallButton,
+                    (savingProperty || !editAddress.trim()) &&
+                      styles.buttonDisabled,
+                  ]}
+                  onPress={() => onSaveProperty(property.id)}
+                  disabled={savingProperty || !editAddress.trim()}
+                >
+                  <Text style={styles.buttonText}>Save</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              key={property.id}
+              style={styles.propertyCard}
+              onPress={() => startEditingProperty(property)}
+            >
+              <Text style={styles.rowTitle}>{property.address}</Text>
+              {property.square_footage != null && (
+                <Text style={styles.rowSubtitle}>
+                  {property.square_footage.toLocaleString()} sq ft
+                </Text>
+              )}
+              {property.latitude != null && property.longitude != null && (
+                <Text style={styles.rowSubtitle}>
+                  {property.latitude}, {property.longitude}
+                </Text>
+              )}
+              {property.notes && (
+                <Text style={styles.rowSubtitle}>{property.notes}</Text>
+              )}
+            </Pressable>
+          ),
+        )}
+
+        {addingProperty ? (
+          <View style={styles.propertyCard}>
+            <TextInput
+              style={styles.input}
+              placeholder="Address"
+              value={newAddress}
+              onChangeText={setNewAddress}
+              autoFocus
+            />
             <TextInput
               style={styles.input}
               placeholder="Square footage"
               keyboardType="numeric"
-              value={editSquareFootage}
-              onChangeText={setEditSquareFootage}
+              value={newSquareFootage}
+              onChangeText={setNewSquareFootage}
             />
             <TextInput
               style={styles.input}
               placeholder="Latitude"
-              value={editLatitude}
-              onChangeText={setEditLatitude}
+              value={newLatitude}
+              onChangeText={setNewLatitude}
             />
             <TextInput
               style={styles.input}
               placeholder="Longitude"
-              value={editLongitude}
-              onChangeText={setEditLongitude}
+              value={newLongitude}
+              onChangeText={setNewLongitude}
             />
             <TextInput
               style={styles.input}
               placeholder="Notes"
-              value={editNotes}
-              onChangeText={setEditNotes}
+              value={newNotes}
+              onChangeText={setNewNotes}
               multiline
             />
             <View style={styles.propertyActions}>
-              <Pressable onPress={() => setEditingPropertyId(null)} style={styles.secondaryButton}>
+              <Pressable
+                onPress={() => {
+                  setAddingProperty(false);
+                  setNewAddress("");
+                  setNewSquareFootage("");
+                  setNewLatitude("");
+                  setNewLongitude("");
+                  setNewNotes("");
+                }}
+                style={styles.secondaryButton}
+              >
                 <Text>Cancel</Text>
               </Pressable>
               <Pressable
-                style={[styles.button, styles.smallButton, (savingProperty || !editAddress.trim()) && styles.buttonDisabled]}
-                onPress={() => onSaveProperty(property.id)}
-                disabled={savingProperty || !editAddress.trim()}
+                style={[
+                  styles.button,
+                  styles.smallButton,
+                  (savingProperty || !newAddress.trim()) &&
+                    styles.buttonDisabled,
+                ]}
+                onPress={onAddProperty}
+                disabled={savingProperty || !newAddress.trim()}
               >
-                <Text style={styles.buttonText}>Save</Text>
+                <Text style={styles.buttonText}>Add</Text>
               </Pressable>
             </View>
           </View>
         ) : (
-          <Pressable key={property.id} style={styles.propertyCard} onPress={() => startEditingProperty(property)}>
-            <Text style={styles.rowTitle}>{property.address}</Text>
-            {property.square_footage != null && (
-              <Text style={styles.rowSubtitle}>{property.square_footage.toLocaleString()} sq ft</Text>
-            )}
-            {property.latitude != null && property.longitude != null && (
-              <Text style={styles.rowSubtitle}>
-                {property.latitude}, {property.longitude}
-              </Text>
-            )}
-            {property.notes && <Text style={styles.rowSubtitle}>{property.notes}</Text>}
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={() => setAddingProperty(true)}
+          >
+            <Text style={styles.addPropertyText}>+ Add property</Text>
           </Pressable>
-        )
-      )}
-
-      {addingProperty ? (
-        <View style={styles.propertyCard}>
-          <TextInput style={styles.input} placeholder="Address" value={newAddress} onChangeText={setNewAddress} autoFocus />
-          <TextInput
-            style={styles.input}
-            placeholder="Square footage"
-            keyboardType="numeric"
-            value={newSquareFootage}
-            onChangeText={setNewSquareFootage}
-          />
-          <TextInput style={styles.input} placeholder="Latitude" value={newLatitude} onChangeText={setNewLatitude} />
-          <TextInput style={styles.input} placeholder="Longitude" value={newLongitude} onChangeText={setNewLongitude} />
-          <TextInput style={styles.input} placeholder="Notes" value={newNotes} onChangeText={setNewNotes} multiline />
-          <View style={styles.propertyActions}>
-            <Pressable
-              onPress={() => {
-                setAddingProperty(false);
-                setNewAddress("");
-                setNewSquareFootage("");
-                setNewLatitude("");
-                setNewLongitude("");
-                setNewNotes("");
-              }}
-              style={styles.secondaryButton}
-            >
-              <Text>Cancel</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.button, styles.smallButton, (savingProperty || !newAddress.trim()) && styles.buttonDisabled]}
-              onPress={onAddProperty}
-              disabled={savingProperty || !newAddress.trim()}
-            >
-              <Text style={styles.buttonText}>Add</Text>
-            </Pressable>
-          </View>
-        </View>
-      ) : (
-        <Pressable style={styles.secondaryButton} onPress={() => setAddingProperty(true)}>
-          <Text style={styles.addPropertyText}>+ Add property</Text>
-        </Pressable>
-      )}
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -329,6 +436,11 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    alignItems: "center",
+  },
+  form: {
+    width: "100%",
+    maxWidth: 640,
     gap: 10,
   },
   centered: {
