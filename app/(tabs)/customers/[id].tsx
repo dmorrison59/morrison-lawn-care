@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 
+import { AddressAutocompleteInput } from "@/components/AddressAutocompleteInput";
 import { Text, View } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -44,6 +45,7 @@ export default function CustomerDetailScreen() {
   const [properties, setProperties] = useState<Property[]>([]);
 
   const [addingProperty, setAddingProperty] = useState(false);
+  const [sameAsCustomerAddress, setSameAsCustomerAddress] = useState(false);
   const [newAddress, setNewAddress] = useState("");
   const [newSquareFootage, setNewSquareFootage] = useState("");
   const [newLatitude, setNewLatitude] = useState("");
@@ -106,6 +108,23 @@ export default function CustomerDetailScreen() {
     }
   };
 
+  const resetNewPropertyFields = () => {
+    setAddingProperty(false);
+    setSameAsCustomerAddress(false);
+    setNewAddress("");
+    setNewSquareFootage("");
+    setNewLatitude("");
+    setNewLongitude("");
+    setNewNotes("");
+  };
+
+  const toggleSameAsCustomerAddress = () => {
+    if (!customer?.address) return;
+    const next = !sameAsCustomerAddress;
+    setSameAsCustomerAddress(next);
+    setNewAddress(next ? customer.address : "");
+  };
+
   const onAddProperty = async () => {
     if (!business || !session) return;
 
@@ -135,12 +154,7 @@ export default function CustomerDetailScreen() {
         userId: session.user.id,
       });
       setProperties((prev) => [...prev, property]);
-      setNewAddress("");
-      setNewSquareFootage("");
-      setNewLatitude("");
-      setNewLongitude("");
-      setNewNotes("");
-      setAddingProperty(false);
+      resetNewPropertyFields();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to add property");
     } finally {
@@ -235,7 +249,7 @@ export default function CustomerDetailScreen() {
           value={phone}
           onChangeText={setPhone}
         />
-        <TextInput
+        <AddressAutocompleteInput
           style={styles.input}
           placeholder="Address"
           value={address}
@@ -277,11 +291,15 @@ export default function CustomerDetailScreen() {
         {properties.map((property) =>
           editingPropertyId === property.id ? (
             <View key={property.id} style={styles.propertyCard}>
-              <TextInput
+              <AddressAutocompleteInput
                 style={styles.input}
                 placeholder="Address"
                 value={editAddress}
                 onChangeText={setEditAddress}
+                onSelectPlace={(place) => {
+                  setEditLatitude(place.latitude.toString());
+                  setEditLongitude(place.longitude.toString());
+                }}
               />
               <TextInput
                 style={styles.input}
@@ -356,12 +374,40 @@ export default function CustomerDetailScreen() {
 
         {addingProperty ? (
           <View style={styles.propertyCard}>
-            <TextInput
+            <Pressable
+              style={styles.checkboxRow}
+              onPress={toggleSameAsCustomerAddress}
+              disabled={!customer.address}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  sameAsCustomerAddress && styles.checkboxChecked,
+                ]}
+              >
+                {sameAsCustomerAddress && (
+                  <Text style={styles.checkboxMark}>✓</Text>
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.checkboxLabel,
+                  !customer.address && styles.checkboxLabelDisabled,
+                ]}
+              >
+                Same as customer address
+              </Text>
+            </Pressable>
+            <AddressAutocompleteInput
               style={styles.input}
               placeholder="Address"
               value={newAddress}
               onChangeText={setNewAddress}
-              autoFocus
+              onSelectPlace={(place) => {
+                setNewLatitude(place.latitude.toString());
+                setNewLongitude(place.longitude.toString());
+              }}
+              editable={!sameAsCustomerAddress}
             />
             <TextInput
               style={styles.input}
@@ -391,14 +437,7 @@ export default function CustomerDetailScreen() {
             />
             <View style={styles.propertyActions}>
               <Pressable
-                onPress={() => {
-                  setAddingProperty(false);
-                  setNewAddress("");
-                  setNewSquareFootage("");
-                  setNewLatitude("");
-                  setNewLongitude("");
-                  setNewNotes("");
-                }}
+                onPress={resetNewPropertyFields}
                 style={styles.secondaryButton}
               >
                 <Text>Cancel</Text>
@@ -514,5 +553,35 @@ const styles = StyleSheet.create({
   rowSubtitle: {
     marginTop: 2,
     opacity: 0.6,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#999",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: "#2f6f4e",
+    borderColor: "#2f6f4e",
+  },
+  checkboxMark: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 14,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+  },
+  checkboxLabelDisabled: {
+    opacity: 0.4,
   },
 });

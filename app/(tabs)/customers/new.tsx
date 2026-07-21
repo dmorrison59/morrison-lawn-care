@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 
+import { AddressAutocompleteInput } from "@/components/AddressAutocompleteInput";
 import { Text } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
 import { createCustomer } from "@/lib/customers";
@@ -75,7 +76,7 @@ export default function NewCustomerScreen() {
           value={phone}
           onChangeText={setPhone}
         />
-        <TextInput
+        <AddressAutocompleteInput
           style={styles.input}
           placeholder="Address"
           value={address}
