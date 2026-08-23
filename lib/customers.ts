@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { withRetry } from "./retry";
 
 export type Customer = {
   id: string;
@@ -28,15 +29,19 @@ const PROPERTY_COLUMNS =
   "id, customer_id, address, square_footage, latitude, longitude, notes, created_at, updated_at";
 
 export async function listCustomers(): Promise<Customer[]> {
-  const { data, error } = await supabase.from("customers").select(CUSTOMER_COLUMNS).order("name");
-  if (error) throw error;
-  return data;
+  return withRetry(async () => {
+    const { data, error } = await supabase.from("customers").select(CUSTOMER_COLUMNS).order("name");
+    if (error) throw error;
+    return data;
+  });
 }
 
 export async function getCustomer(id: string): Promise<Customer> {
-  const { data, error } = await supabase.from("customers").select(CUSTOMER_COLUMNS).eq("id", id).single();
-  if (error) throw error;
-  return data;
+  return withRetry(async () => {
+    const { data, error } = await supabase.from("customers").select(CUSTOMER_COLUMNS).eq("id", id).single();
+    if (error) throw error;
+    return data;
+  });
 }
 
 export async function createCustomer(input: {
@@ -77,13 +82,15 @@ export async function updateCustomer(
 }
 
 export async function listProperties(customerId: string): Promise<Property[]> {
-  const { data, error } = await supabase
-    .from("properties")
-    .select(PROPERTY_COLUMNS)
-    .eq("customer_id", customerId)
-    .order("created_at");
-  if (error) throw error;
-  return data;
+  return withRetry(async () => {
+    const { data, error } = await supabase
+      .from("properties")
+      .select(PROPERTY_COLUMNS)
+      .eq("customer_id", customerId)
+      .order("created_at");
+    if (error) throw error;
+    return data;
+  });
 }
 
 export async function createProperty(input: {
