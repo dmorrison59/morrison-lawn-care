@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from "react-native";
-import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 
 import { Text, View } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
+import { createJob, getJobForQuote, type Job } from "@/lib/jobs";
 import {
   addQuoteItem,
   deleteQuoteItem,
@@ -28,7 +29,8 @@ function formatCurrency(amount: number): string {
 
 export default function QuoteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { business } = useAuth();
+  const router = useRouter();
+  const { session, business } = useAuth();
 
   const [quote, setQuote] = useState<QuoteWithCustomer | null>(null);
   const [items, setItems] = useState<QuoteItem[]>([]);
@@ -44,15 +46,23 @@ export default function QuoteDetailScreen() {
   const [newUnitPrice, setNewUnitPrice] = useState("");
   const [addingItem, setAddingItem] = useState(false);
 
+  const [existingJob, setExistingJob] = useState<Job | null>(null);
+  const [convertingToJob, setConvertingToJob] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [quoteData, itemsData] = await Promise.all([getQuote(id), listQuoteItems(id)]);
+      const [quoteData, itemsData, jobData] = await Promise.all([
+        getQuote(id),
+        listQuoteItems(id),
+        getJobForQuote(id),
+      ]);
       setQuote(quoteData);
       setItems(itemsData);
       setNotes(quoteData.notes ?? "");
       setValidUntil(quoteData.valid_until ?? "");
+      setExistingJob(jobData);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load quote");
     } finally {
@@ -89,6 +99,30 @@ export default function QuoteDetailScreen() {
       setError(e instanceof Error ? e.message : "Failed to save quote");
     } finally {
       setSavingDetails(false);
+    }
+  };
+
+  const onConvertToJob = async () => {
+    if (!quote || !business || !session) return;
+    setError(null);
+    setConvertingToJob(true);
+    try {
+      const job = await createJob({
+        customerId: quote.customer_id,
+        propertyId: quote.property_id,
+        quoteId: quote.id,
+        title: `Job for ${quote.customers?.name ?? "customer"}`,
+        scheduledDate: null,
+        estimatedPrice: quote.total_amount,
+        notes: quote.notes,
+        businessId: business.id,
+        userId: session.user.id,
+      });
+      router.push(`/(tabs)/jobs/${job.id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create job");
+    } finally {
+      setConvertingToJob(false);
     }
   };
 
@@ -171,6 +205,28 @@ export default function QuoteDetailScreen() {
             </Pressable>
           ))}
         </View>
+
+        {quote.status === "approved" &&
+          (existingJob ? (
+            <Pressable
+              style={[styles.button, styles.smallButton, styles.jobButton]}
+              onPress={() => router.push(`/(tabs)/jobs/${existingJob.id}`)}
+            >
+              <Text style={styles.buttonText}>View job</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={[styles.button, styles.smallButton, styles.jobButton, convertingToJob && styles.buttonDisabled]}
+              onPress={onConvertToJob}
+              disabled={convertingToJob}
+            >
+              {convertingToJob ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Convert to job</Text>
+              )}
+            </Pressable>
+          ))}
 
         <Text style={styles.label}>Valid until (YYYY-MM-DD)</Text>
         <TextInput style={styles.input} value={validUntil} onChangeText={setValidUntil} placeholder="2026-09-30" />
@@ -313,6 +369,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     alignSelf: "flex-start",
+  },
+  jobButton: {
+    marginTop: 4,
   },
   buttonDisabled: {
     opacity: 0.6,

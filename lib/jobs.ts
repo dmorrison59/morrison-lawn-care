@@ -50,6 +50,27 @@ export async function getJob(id: string): Promise<JobWithCustomer> {
   });
 }
 
+export async function listJobsForCustomer(customerId: string): Promise<Job[]> {
+  return withRetry(async () => {
+    const { data, error } = await supabase
+      .from("jobs")
+      .select(JOB_COLUMNS)
+      .eq("customer_id", customerId)
+      .order("scheduled_date", { ascending: true, nullsFirst: false });
+    if (error) throw error;
+    return data;
+  });
+}
+
+/** The job already created from a given quote, if any -- lets the quote detail screen offer "View Job" instead of creating a duplicate. */
+export async function getJobForQuote(quoteId: string): Promise<Job | null> {
+  return withRetry(async () => {
+    const { data, error } = await supabase.from("jobs").select(JOB_COLUMNS).eq("quote_id", quoteId).maybeSingle();
+    if (error) throw error;
+    return data;
+  });
+}
+
 export async function createJob(input: {
   customerId: string;
   propertyId: string | null;

@@ -43,6 +43,18 @@ export async function listQuotes(): Promise<QuoteWithCustomer[]> {
   });
 }
 
+export async function listQuotesForCustomer(customerId: string): Promise<Quote[]> {
+  return withRetry(async () => {
+    const { data, error } = await supabase
+      .from("quotes")
+      .select(QUOTE_COLUMNS)
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  });
+}
+
 export async function getQuote(id: string): Promise<QuoteWithCustomer> {
   return withRetry(async () => {
     const { data, error } = await supabase
