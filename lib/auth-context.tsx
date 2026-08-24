@@ -9,6 +9,7 @@ import {
   type PropsWithChildren,
 } from "react";
 import { supabase } from "./supabase";
+import { withRetry } from "./retry";
 
 export type Business = {
   id: string;
@@ -42,13 +43,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const loadBusiness = useCallback(async (userId: string) => {
     setBusinessLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("role, businesses(id, name, industry_type, created_at)")
-        .eq("id", userId)
-        .maybeSingle();
+      const data = await withRetry(async () => {
+        const { data, error } = await supabase
+          .from("users")
+          .select("role, businesses(id, name, industry_type, created_at)")
+          .eq("id", userId)
+          .maybeSingle();
 
-      if (error) throw error;
+        if (error) throw error;
+        return data;
+      });
 
       if (data?.businesses) {
         setBusiness(data.businesses as unknown as Business);
@@ -69,10 +73,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [session?.user.id, loadBusiness]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setAuthLoading(false);
-    });
+    withRetry(async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return data.session;
+    })
+      .then((session) => setSession(session))
+      .catch(() => setSession(null))
+      .finally(() => setAuthLoading(false));
 
     const {
       data: { subscription },

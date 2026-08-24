@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TextInput,
 } from "react-native";
-import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 
 import { AddressAutocompleteInput } from "@/components/AddressAutocompleteInput";
 import { Text, View } from "@/components/Themed";
@@ -20,6 +20,26 @@ import {
   type Customer,
   type Property,
 } from "@/lib/customers";
+import { listJobsForCustomer, type Job, type JobStatus } from "@/lib/jobs";
+import { listQuotesForCustomer, type Quote, type QuoteStatus } from "@/lib/quotes";
+
+const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
+  draft: "Draft",
+  sent: "Sent",
+  approved: "Approved",
+  declined: "Declined",
+};
+
+const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  scheduled: "Scheduled",
+  in_progress: "In progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+function formatCurrency(amount: number): string {
+  return amount.toLocaleString(undefined, { style: "currency", currency: "USD" });
+}
 
 function parseOptionalNumber(text: string): number | null | undefined {
   const trimmed = text.trim();
@@ -30,9 +50,12 @@ function parseOptionalNumber(text: string): number | null | undefined {
 
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { session, business } = useAuth();
 
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -66,9 +89,11 @@ export default function CustomerDetailScreen() {
     setLoading(true);
     setError(null);
     try {
-      const [customerData, propertiesData] = await Promise.all([
+      const [customerData, propertiesData, quotesData, jobsData] = await Promise.all([
         getCustomer(id),
         listProperties(id),
+        listQuotesForCustomer(id),
+        listJobsForCustomer(id),
       ]);
       setCustomer(customerData);
       setName(customerData.name);
@@ -77,6 +102,8 @@ export default function CustomerDetailScreen() {
       setAddress(customerData.address ?? "");
       setNotes(customerData.notes ?? "");
       setProperties(propertiesData);
+      setQuotes(quotesData);
+      setJobs(jobsData);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load customer");
     } finally {
@@ -464,6 +491,32 @@ export default function CustomerDetailScreen() {
             <Text style={styles.addPropertyText}>+ Add property</Text>
           </Pressable>
         )}
+
+        <Text style={[styles.sectionTitle, styles.propertiesTitle]}>Quotes</Text>
+        {quotes.length === 0 && <Text style={styles.empty}>No quotes yet.</Text>}
+        {quotes.map((quote) => (
+          <Pressable
+            key={quote.id}
+            style={styles.propertyCard}
+            onPress={() => router.push(`/(tabs)/quotes/${quote.id}`)}
+          >
+            <Text style={styles.rowTitle}>{formatCurrency(quote.total_amount)}</Text>
+            <Text style={styles.rowSubtitle}>{QUOTE_STATUS_LABELS[quote.status]}</Text>
+          </Pressable>
+        ))}
+
+        <Text style={[styles.sectionTitle, styles.propertiesTitle]}>Jobs</Text>
+        {jobs.length === 0 && <Text style={styles.empty}>No jobs yet.</Text>}
+        {jobs.map((job) => (
+          <Pressable
+            key={job.id}
+            style={styles.propertyCard}
+            onPress={() => router.push(`/(tabs)/jobs/${job.id}`)}
+          >
+            <Text style={styles.rowTitle}>{job.title || "Untitled job"}</Text>
+            <Text style={styles.rowSubtitle}>{JOB_STATUS_LABELS[job.status]}</Text>
+          </Pressable>
+        ))}
       </View>
     </ScrollView>
   );
