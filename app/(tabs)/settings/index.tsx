@@ -1,10 +1,12 @@
 import { Pressable, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 
 import { ResponsiveContainer } from "@/components/ResponsiveContainer";
 import { Text, View } from "@/components/Themed";
 import { useAuth } from "@/lib/auth-context";
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { session, business, role, signOut } = useAuth();
 
   return (
@@ -30,6 +32,14 @@ export default function SettingsScreen() {
         <Text style={styles.label}>Role</Text>
         <Text style={styles.value}>{role}</Text>
       </View>
+
+      <Pressable
+        style={styles.linkRow}
+        onPress={() => router.push("/(tabs)/settings/pricing-tiers")}
+      >
+        <Text style={styles.linkText}>Pricing tiers</Text>
+        <Text style={styles.linkChevron}>›</Text>
+      </Pressable>
 
       <Pressable style={styles.button} onPress={() => signOut()}>
         <Text style={styles.buttonText}>Log out</Text>
@@ -58,6 +68,22 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 16,
+  },
+  linkRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#ddd",
+  },
+  linkText: {
+    fontSize: 16,
+  },
+  linkChevron: {
+    fontSize: 20,
+    opacity: 0.4,
   },
   button: {
     marginTop: 24,
